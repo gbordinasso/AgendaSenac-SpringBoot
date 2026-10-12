@@ -2,6 +2,7 @@ package senac.agendasenac.service;
 
 import org.springframework.stereotype.Service;
 import senac.agendasenac.entity.Usuario;
+import senac.agendasenac.entity.TipoUsuario;
 import senac.agendasenac.repository.UsuarioRepository;
 
 import java.util.List;
@@ -33,8 +34,22 @@ public class UsuarioService {
         return usuarioRepository.findAll();
     }
 
+    public List<Usuario> listarPorTipo(TipoUsuario tipoUsuario) {
+        return usuarioRepository.findByTipoUsuario(tipoUsuario);
+    }
+
     public Optional<Usuario> buscarPorId(Long id) {
         return usuarioRepository.findById(id);
+    }
+
+    public Optional<Usuario> buscarPorIdETipo(Long id, TipoUsuario tipoUsuario) {
+        return usuarioRepository.findById(id)
+                .filter(usuario -> usuario.getTipoUsuario() == tipoUsuario);
+    }
+
+    public Usuario salvarPorTipo(Usuario usuario, TipoUsuario tipoUsuario) {
+        usuario.setTipoUsuario(tipoUsuario);
+        return salvar(usuario);
     }
 
     public Usuario atualizar(Long id, Usuario usuario) {
@@ -61,11 +76,37 @@ public class UsuarioService {
         return usuarioRepository.save(usuarioExistente);
     }
 
+    public Usuario atualizarPorTipo(Long id, Usuario usuario, TipoUsuario tipoUsuario) {
+
+        Usuario usuarioExistente = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        if (usuarioExistente.getTipoUsuario() != tipoUsuario) {
+            throw new RuntimeException("Usuário não pertence a este tipo");
+        }
+
+        usuario.setTipoUsuario(tipoUsuario);
+
+        return atualizar(id, usuario);
+    }
+
     public void excluir(Long id) {
         if (!usuarioRepository.existsById(id)) {
             throw new RuntimeException("Usuário não encontrado");
         }
 
         usuarioRepository.deleteById(id);
+    }
+
+    public void excluirPorTipo(Long id, TipoUsuario tipoUsuario) {
+
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        if (usuario.getTipoUsuario() != tipoUsuario) {
+            throw new RuntimeException("Usuário não pertence a este tipo");
+        }
+
+        excluir(id);
     }
 }
