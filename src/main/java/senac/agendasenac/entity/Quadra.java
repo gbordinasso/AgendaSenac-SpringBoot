@@ -19,6 +19,9 @@ public class Quadra {
     @Column(nullable = false)
     private String modalidade;
 
+    @Column(nullable = false)
+    private String foto;
+
     @Enumerated(EnumType.STRING)
     private StatusQuadra status;
 
@@ -57,6 +60,14 @@ public class Quadra {
 
     public void setModalidade(String modalidade) {
         this.modalidade = modalidade;
+    }
+
+    public String getFoto() {
+        return foto;
+    }
+
+    public void setFoto(String foto) {
+        this.foto = foto;
     }
 
     public StatusQuadra getStatus() {

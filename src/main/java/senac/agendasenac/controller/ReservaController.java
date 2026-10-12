@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import senac.agendasenac.entity.Participante;
 import senac.agendasenac.entity.Reserva;
 import senac.agendasenac.service.ReservaService;
 
@@ -40,18 +41,11 @@ public class ReservaController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Reserva> atualizar(@PathVariable Long id, @RequestBody Reserva reserva) {
-        Reserva reservaAtualizada = reservaService.atualizar(id, reserva);
-
-        return ResponseEntity.ok(reservaAtualizada);
-    }
-
     @PatchMapping("/{id}/cancelar")
-    public ResponseEntity<Reserva> cancelar(@PathVariable Long id) {
-        Reserva reservaCancelada = reservaService.cancelar(id);
+    public ResponseEntity<Void> cancelar(@PathVariable Long id) {
+        reservaService.cancelar(id);
 
-        return ResponseEntity.ok(reservaCancelada);
+        return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/concluir")
@@ -66,5 +60,13 @@ public class ReservaController {
         reservaService.excluir(id);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/participantes")
+    public ResponseEntity<?> adicionarParticipante(@PathVariable Long id, @RequestBody Participante participante) {
+
+        reservaService.adicionarParticipante(id, participante.getNome(), participante.getCpf());
+
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 }

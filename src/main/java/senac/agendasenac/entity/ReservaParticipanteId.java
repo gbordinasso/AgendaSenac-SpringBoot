@@ -14,6 +14,11 @@ public class ReservaParticipanteId implements Serializable {
 
     }
 
+    public ReservaParticipanteId(Long reservaId, Long participanteId) {
+        this.reservaId = reservaId;
+        this.participanteId = participanteId;
+    }
+
     public Long getReservaId() {
         return reservaId;
     }

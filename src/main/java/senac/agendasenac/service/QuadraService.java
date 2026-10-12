@@ -46,6 +46,7 @@ public class QuadraService {
         quadraExistente.setNome(quadra.getNome());
         quadraExistente.setLocalizacao(quadra.getLocalizacao());
         quadraExistente.setModalidade(quadra.getModalidade());
+        quadraExistente.setFoto(quadra.getFoto());
         quadraExistente.setStatus(quadra.getStatus());
 
         return quadraRepository.save(quadraExistente);

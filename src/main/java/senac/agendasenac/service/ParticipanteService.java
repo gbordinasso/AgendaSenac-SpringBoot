@@ -46,7 +46,6 @@ public class ParticipanteService {
 
         participanteExistente.setNome(participante.getNome());
         participanteExistente.setCpf(participante.getCpf());
-        participanteExistente.setCurso(participante.getCurso());
 
         return participanteRepository.save(participanteExistente);
     }

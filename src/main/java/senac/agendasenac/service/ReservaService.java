@@ -1,32 +1,37 @@
 package senac.agendasenac.service;
 
 import org.springframework.stereotype.Service;
-import senac.agendasenac.entity.Horario;
-import senac.agendasenac.entity.Reserva;
-import senac.agendasenac.entity.StatusHorario;
-import senac.agendasenac.entity.StatusReserva;
-import senac.agendasenac.repository.HorarioRepository;
-import senac.agendasenac.repository.ReservaRepository;
-import senac.agendasenac.repository.UsuarioRepository;
+import senac.agendasenac.entity.*;
+import senac.agendasenac.repository.*;
 
+import java.security.SecureRandom;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class ReservaService {
 
+    private final SecureRandom secureRandom = new SecureRandom();
+
     private final ReservaRepository reservaRepository;
     private final UsuarioRepository usuarioRepository;
     private final HorarioRepository horarioRepository;
+    private final ReservaParticipanteRepository reservaParticipanteRepository;
+    private final ParticipanteRepository participanteRepository;
 
     public ReservaService(
             ReservaRepository reservaRepository,
             UsuarioRepository usuarioRepository,
-            HorarioRepository horarioRepository) {
+            HorarioRepository horarioRepository,
+            ReservaParticipanteRepository reservaParticipanteRepository,
+            ParticipanteRepository participanteRepository) {
 
         this.reservaRepository = reservaRepository;
         this.usuarioRepository = usuarioRepository;
         this.horarioRepository = horarioRepository;
+        this.reservaParticipanteRepository = reservaParticipanteRepository;
+        this.participanteRepository = participanteRepository;
     }
 
     public Reserva salvar(Reserva reserva) {
@@ -46,12 +51,14 @@ public class ReservaService {
             throw new RuntimeException("Horário não está disponível");
         }
 
-        if (reservaRepository.existsByHorario(horario)) {
+        if (reservaRepository.existsByHorarioAndStatus(horario, StatusReserva.ATIVA)) {
             throw new RuntimeException("Horário já reservado");
         }
 
         reserva.setHorario(horario);
         reserva.setStatus(StatusReserva.ATIVA);
+        reserva.setDataReserva(LocalDateTime.now());
+        reserva.setCodigoAcesso(gerarCodigoAcessoUnico());
 
         Reserva reservaSalva = reservaRepository.save(reserva);
 
@@ -69,24 +76,7 @@ public class ReservaService {
         return reservaRepository.findById(id);
     }
 
-    public Reserva atualizar(Long id, Reserva reserva) {
-
-        Reserva reservaExistente = reservaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Reserva não encontrada"));
-
-        if (!usuarioRepository.existsById(reserva.getUsuario().getId())) {
-            throw new RuntimeException("Usuário não encontrado");
-        }
-
-        reservaExistente.setUsuario(reserva.getUsuario());
-        reservaExistente.setCodigoAcesso(reserva.getCodigoAcesso());
-        reservaExistente.setStatus(reserva.getStatus());
-        reservaExistente.setDataReserva(reserva.getDataReserva());
-
-        return reservaRepository.save(reservaExistente);
-    }
-
-    public Reserva cancelar(Long id) {
+    public void cancelar(Long id) {
 
         Reserva reserva = reservaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Reserva não encontrada"));
@@ -95,14 +85,24 @@ public class ReservaService {
             throw new RuntimeException("A reserva não está ativa");
         }
 
-        reserva.setStatus(StatusReserva.CANCELADA);
-
         Horario horario = reserva.getHorario();
+
+        LocalDateTime inicioHorario = horario.getData().atTime(horario.getHoraInicio());
+
+        LocalDateTime limiteCancelamento = inicioHorario.minusHours(2);
+
+        if (LocalDateTime.now().isAfter(limiteCancelamento)) {
+            throw new RuntimeException(
+                    "A reserva só pode ser cancelada com pelo menos 2 horas de antecedência. " +
+                            "Em caso de necessidade, entre em contato com o suporte."
+            );
+        }
+
         horario.setStatus(StatusHorario.DISPONIVEL);
 
         horarioRepository.save(horario);
 
-        return reservaRepository.save(reserva);
+        reservaRepository.delete(reserva);
     }
 
     public Reserva concluir(Long id) {
@@ -126,5 +126,70 @@ public class ReservaService {
         }
 
         reservaRepository.deleteById(id);
+    }
+
+    public void adicionarParticipante(Long reservaId, String nome, String cpf) {
+
+        Reserva reserva = reservaRepository.findById(reservaId)
+                .orElseThrow(() -> new RuntimeException("Reserva não encontrada"));
+
+        if (reserva.getStatus() != StatusReserva.ATIVA) {
+            throw new RuntimeException("A reserva não está ativa");
+        }
+
+        Optional<Participante> participanteExistente = participanteRepository.findByCpf(cpf);
+
+        Participante participante;
+
+        if (participanteExistente.isEmpty()) {
+            Participante novoParticipante = new Participante();
+
+            novoParticipante.setNome(nome);
+            novoParticipante.setCpf(cpf);
+
+            participante = participanteRepository.save(novoParticipante);
+        } else {
+            participante = participanteExistente.get();
+        }
+
+        ReservaParticipanteId id = new ReservaParticipanteId(reservaId, participante.getId());
+
+        if (reservaParticipanteRepository.existsById(id)) {
+            throw new RuntimeException("Participante já está adicionado à reserva");
+        }
+
+        ReservaParticipante reservaParticipante = new ReservaParticipante();
+
+        reservaParticipante.setId(id);
+        reservaParticipante.setReserva(reserva);
+        reservaParticipante.setParticipante(participante);
+
+        reservaParticipanteRepository.save(reservaParticipante);
+    }
+
+    private String gerarCodigoAcesso() {
+        String caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+        StringBuilder codigo = new StringBuilder();
+
+        for (int i = 0; i < 9; i++) {
+            int indice = secureRandom.nextInt(caracteres.length());
+
+            codigo.append(caracteres.charAt(indice));
+        }
+
+        codigo.insert(4, '-');
+
+        return codigo.toString();
+    }
+
+    private String gerarCodigoAcessoUnico() {
+        String codigo;
+
+        do {
+            codigo = gerarCodigoAcesso();
+        } while (reservaRepository.existsByCodigoAcesso(codigo));
+
+        return codigo;
     }
 }

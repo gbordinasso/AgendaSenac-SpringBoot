@@ -9,18 +9,27 @@ import java.time.LocalTime;
 
 public interface HorarioRepository extends JpaRepository<Horario, Long> {
 
-    boolean existsByQuadraAndDataAndHoraInicioAndHoraFim(
+    boolean existsByQuadraAndDataAndHoraInicioLessThanAndHoraFimGreaterThan(
             Quadra quadra,
+            LocalDate data,
+            LocalTime horaFim,
+            LocalTime horaInicio
+    );
+
+    boolean existsByQuadraAndDataAndHoraInicioLessThanAndHoraFimGreaterThanAndIdNot(
+            Quadra quadra,
+            LocalDate data,
+            LocalTime horaFim,
+            LocalTime horaInicio,
+            Long id
+    );
+
+
+    boolean existsByQuadraIdAndDataAndHoraInicioAndHoraFim(
+            Long quadraId,
             LocalDate data,
             LocalTime horaInicio,
             LocalTime horaFim
     );
 
-    boolean existsByQuadraAndDataAndHoraInicioAndHoraFimAndIdNot(
-            Quadra quadra,
-            LocalDate data,
-            LocalTime horaInicio,
-            LocalTime horaFim,
-            Long id
-    );
 }

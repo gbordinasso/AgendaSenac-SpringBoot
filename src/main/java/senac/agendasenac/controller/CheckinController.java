@@ -20,8 +20,8 @@ public class CheckinController {
     }
 
     @PostMapping
-    public ResponseEntity<Checkin> salvar(@RequestBody Checkin checkin) {
-        Checkin checkinSalvo = checkinService.salvar(checkin);
+    public ResponseEntity<Checkin> salvar(@RequestParam Long reservaId, @RequestParam String codigoAcesso) {
+        Checkin checkinSalvo = checkinService.salvar(reservaId, codigoAcesso);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)

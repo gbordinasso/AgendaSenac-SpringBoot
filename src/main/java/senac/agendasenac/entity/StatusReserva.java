@@ -3,5 +3,6 @@ package senac.agendasenac.entity;
 public enum StatusReserva {
     ATIVA,
     CANCELADA,
-    CONCLUIDA
+    CONCLUIDA,
+    NAO_COMPARECEU
 }

@@ -19,7 +19,7 @@ public class Reserva {
     @JoinColumn(name = "horario_id", nullable = false)
     private Horario horario;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String codigoAcesso;
 
     @Enumerated(EnumType.STRING)

@@ -16,10 +16,6 @@ public class Participante {
     @Column(nullable = false, unique = true)
     private String cpf;
 
-    @Column(nullable = false)
-    private String curso;
-
-
     public Participante() {
 
     }
@@ -48,11 +44,4 @@ public class Participante {
         this.cpf = cpf;
     }
 
-    public String getCurso() {
-        return curso;
-    }
-
-    public void setCurso(String curso) {
-        this.curso = curso;
-    }
 }
