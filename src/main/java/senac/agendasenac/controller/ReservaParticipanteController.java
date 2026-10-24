@@ -1,6 +1,5 @@
 package senac.agendasenac.controller;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,15 +19,6 @@ public class ReservaParticipanteController {
         this.reservaParticipanteService = reservaParticipanteService;
     }
 
-    @PostMapping
-    public ResponseEntity<ReservaParticipante> salvar(@RequestBody ReservaParticipante reservaParticipante) {
-        ReservaParticipante participacaoSalva = reservaParticipanteService.salvar(reservaParticipante);
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(participacaoSalva);
-    }
-
     @GetMapping
     public ResponseEntity<List<ReservaParticipante>> listarTodos() {
         return ResponseEntity.ok(reservaParticipanteService.listarTodos());
@@ -41,14 +31,6 @@ public class ReservaParticipanteController {
         return reservaParticipanteService.buscarPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
-    }
-
-    @PutMapping("/{reservaId}/{participanteId}")
-    public ResponseEntity<ReservaParticipante> atualizar(@PathVariable Long reservaId, @PathVariable Long participanteId, @RequestBody ReservaParticipante reservaParticipante) {
-        ReservaParticipanteId id = criarId(reservaId, participanteId);
-        ReservaParticipante participacaoAtualizada = reservaParticipanteService.atualizar(id, reservaParticipante);
-
-        return ResponseEntity.ok(participacaoAtualizada);
     }
 
     @DeleteMapping("/{reservaId}/{participanteId}")

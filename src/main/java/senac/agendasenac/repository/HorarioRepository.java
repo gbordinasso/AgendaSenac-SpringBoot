@@ -9,6 +9,8 @@ import java.time.LocalTime;
 
 public interface HorarioRepository extends JpaRepository<Horario, Long> {
 
+    void deleteByQuadra_Id(Long quadraId);
+
     boolean existsByQuadraAndDataAndHoraInicioLessThanAndHoraFimGreaterThan(
             Quadra quadra,
             LocalDate data,

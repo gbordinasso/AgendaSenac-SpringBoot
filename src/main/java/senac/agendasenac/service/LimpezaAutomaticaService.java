@@ -12,53 +12,52 @@ import senac.agendasenac.entity.StatusCheckin;
 import senac.agendasenac.entity.StatusReserva;
 import senac.agendasenac.repository.CheckinRepository;
 import senac.agendasenac.repository.HorarioRepository;
-import senac.agendasenac.repository.ReservaParticipanteRepository;
 import senac.agendasenac.repository.ReservaRepository;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class LimpezaAutomaticaService {
 
-    private static final ZoneId FUSO_HORARIO =
-            ZoneId.of("America/Sao_Paulo");
-
     private final HorarioRepository horarioRepository;
     private final ReservaRepository reservaRepository;
     private final CheckinRepository checkinRepository;
-    private final ReservaParticipanteRepository reservaParticipanteRepository;
+    private final ExclusaoReservaService exclusaoReservaService;
+    private final Clock clock;
 
     public LimpezaAutomaticaService(
             HorarioRepository horarioRepository,
             ReservaRepository reservaRepository,
             CheckinRepository checkinRepository,
-            ReservaParticipanteRepository reservaParticipanteRepository) {
+            ExclusaoReservaService exclusaoReservaService,
+            Clock clock) {
 
         this.horarioRepository = horarioRepository;
         this.reservaRepository = reservaRepository;
         this.checkinRepository = checkinRepository;
-        this.reservaParticipanteRepository = reservaParticipanteRepository;
+        this.exclusaoReservaService = exclusaoReservaService;
+        this.clock = clock;
     }
 
     @Scheduled(fixedDelay = 60000)
     @Transactional
     public void limparRegistrosEncerrados() {
 
-        LocalDateTime agora = LocalDateTime.now(FUSO_HORARIO);
+        LocalDateTime agora = LocalDateTime.now(clock);
 
         // 1. Exclui reservas que já não estão ativas.
         List<Reserva> reservas = reservaRepository.findAll();
 
         for (Reserva reserva : reservas) {
             if (reserva.getStatus() != StatusReserva.ATIVA) {
-                excluirReservaEDependencias(reserva);
+                exclusaoReservaService.excluirReservaEDependencias(reserva);
             }
         }
 
-        // 2. Procura horários cujo término já foi atingido.
+        // 2. Procura horários que já chegou ao fim.
         List<Horario> horarios = horarioRepository.findAll();
 
         for (Horario horario : horarios) {
@@ -98,24 +97,13 @@ public class LimpezaAutomaticaService {
                     reservaRepository.save(reserva);
                 }
 
-                // Remove a reserva e seus registros dependentes.
-                excluirReservaEDependencias(reserva);
+                // Remove a reserva e tudo que depende dela.
+                exclusaoReservaService.excluirReservaEDependencias(reserva);
             }
 
             // Sem reserva vinculada, ou após removê-la,
             // o horário encerrado pode ser excluído.
             horarioRepository.delete(horario);
         }
-    }
-
-    private void excluirReservaEDependencias(Reserva reserva) {
-
-        Long reservaId = reserva.getId();
-
-        checkinRepository.deleteByReserva_Id(reservaId);
-
-        reservaParticipanteRepository.deleteByReserva_Id(reservaId);
-
-        reservaRepository.delete(reserva);
     }
 }

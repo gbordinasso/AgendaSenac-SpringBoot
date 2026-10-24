@@ -1,8 +1,11 @@
 package senac.agendasenac.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import senac.agendasenac.entity.Quadra;
+import senac.agendasenac.repository.HorarioRepository;
 import senac.agendasenac.repository.QuadraRepository;
+import senac.agendasenac.repository.ReservaRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -11,9 +14,16 @@ import java.util.Optional;
 public class QuadraService {
 
     private final QuadraRepository quadraRepository;
+    private final HorarioRepository horarioRepository;
+    private final ReservaRepository reservaRepository;
 
-    public QuadraService(QuadraRepository quadraRepository) {
+    public QuadraService(
+            QuadraRepository quadraRepository,
+            HorarioRepository horarioRepository,
+            ReservaRepository reservaRepository) {
         this.quadraRepository = quadraRepository;
+        this.horarioRepository = horarioRepository;
+        this.reservaRepository = reservaRepository;
     }
 
     public Quadra salvar(Quadra quadra) {
@@ -52,12 +62,19 @@ public class QuadraService {
         return quadraRepository.save(quadraExistente);
     }
 
+    @Transactional
     public void excluir(Long id) {
 
         if (!quadraRepository.existsById(id)) {
             throw new RuntimeException("Quadra não encontrada");
         }
 
+        if (reservaRepository.existsByHorario_Quadra_Id(id)) {
+            throw new RuntimeException("A quadra possui reservas e não pode ser excluída");
+        }
+
+        // Sem reservas: apaga os horários da quadra e depois a própria quadra.
+        horarioRepository.deleteByQuadra_Id(id);
         quadraRepository.deleteById(id);
     }
 }

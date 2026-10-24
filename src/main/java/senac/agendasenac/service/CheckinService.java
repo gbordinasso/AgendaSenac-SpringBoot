@@ -6,32 +6,34 @@ import org.springframework.transaction.annotation.Transactional;
 
 import senac.agendasenac.entity.*;
 import senac.agendasenac.repository.CheckinRepository;
-import senac.agendasenac.repository.ReservaParticipanteRepository;
 import senac.agendasenac.repository.ReservaRepository;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class CheckinService {
 
-    private static final ZoneId FUSO_HORARIO =
-            ZoneId.of("America/Sao_Paulo");
-
     private final CheckinRepository checkinRepository;
     private final ReservaRepository reservaRepository;
-    private final ReservaParticipanteRepository reservaParticipanteRepository;
+    private final ReservaService reservaService;
+    private final ExclusaoReservaService exclusaoReservaService;
+    private final Clock clock;
 
     public CheckinService(
             CheckinRepository checkinRepository,
             ReservaRepository reservaRepository,
-            ReservaParticipanteRepository reservaParticipanteRepository) {
+            ReservaService reservaService,
+            ExclusaoReservaService exclusaoReservaService,
+            Clock clock) {
 
         this.checkinRepository = checkinRepository;
         this.reservaRepository = reservaRepository;
-        this.reservaParticipanteRepository = reservaParticipanteRepository;
+        this.reservaService = reservaService;
+        this.exclusaoReservaService = exclusaoReservaService;
+        this.clock = clock;
     }
 
     @Transactional
@@ -53,7 +55,7 @@ public class CheckinService {
 
         Horario horario = reserva.getHorario();
 
-        LocalDateTime agora = LocalDateTime.now(FUSO_HORARIO);
+        LocalDateTime agora = LocalDateTime.now(clock);
 
         LocalDateTime inicioReserva = LocalDateTime.of(
                 horario.getData(),
@@ -79,7 +81,7 @@ public class CheckinService {
             );
         }
 
-        // 1. Registra o check-in.
+        // 1 Registra o check-in.
         Checkin checkin = new Checkin();
         checkin.setReserva(reserva);
         checkin.setDataHora(agora);
@@ -87,19 +89,11 @@ public class CheckinService {
 
         Checkin checkinSalvo = checkinRepository.saveAndFlush(checkin);
 
-        // 2. Conclui a reserva.
-        reserva.setStatus(StatusReserva.CONCLUIDA);
-        reservaRepository.saveAndFlush(reserva);
+        // 2 Conclui a reserva. A regra "só conclui com check-in realizado" fica em um lugar só: ReservaService.concluir.
+        reservaService.concluir(reserva.getId());
 
-        // 3. Remove os registros que dependem da reserva.
-        checkinRepository.delete(checkinSalvo);
-
-        reservaParticipanteRepository.deleteByReserva_Id(
-                reserva.getId()
-        );
-
-        // 4. Exclui a reserva concluída.
-        reservaRepository.delete(reserva);
+        // 3 Apaga a reserva concluída e tudo que depende dela (check-in, vínculos e participantes que ficaram sem reserva).
+        exclusaoReservaService.excluirReservaEDependencias(reserva);
 
         return checkinSalvo;
     }

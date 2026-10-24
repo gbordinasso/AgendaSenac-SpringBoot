@@ -6,7 +6,13 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Entity
-@Table(name = "horario")
+@Table(
+        name = "horario",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_horario_quadra_data_hora",
+                columnNames = {"quadra_id", "data", "hora_inicio", "hora_fim"}
+        )
+)
 public class Horario {
 
     @Id

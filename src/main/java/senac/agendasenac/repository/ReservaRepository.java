@@ -14,4 +14,8 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
     boolean existsByCodigoAcesso(String codigoAcesso);
 
     Optional<Reserva> findByHorario(Horario horario);
+
+    boolean existsByUsuario_Id(Long usuarioId);
+
+    boolean existsByHorario_Quadra_Id(Long quadraId);
 }

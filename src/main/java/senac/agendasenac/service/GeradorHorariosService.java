@@ -15,31 +15,31 @@ import senac.agendasenac.repository.QuadraRepository;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.ZoneId;
+import java.time.Clock;
 import java.util.List;
 
 @Component
 public class GeradorHorariosService implements CommandLineRunner {
 
-    private static final ZoneId FUSO_HORARIO =
-            ZoneId.of("America/Sao_Paulo");
-
     private final HorarioRepository horarioRepository;
     private final QuadraRepository quadraRepository;
+    private final Clock clock;
 
     public GeradorHorariosService(
             HorarioRepository horarioRepository,
-            QuadraRepository quadraRepository) {
+            QuadraRepository quadraRepository,
+            Clock clock) {
         this.horarioRepository = horarioRepository;
         this.quadraRepository = quadraRepository;
+        this.clock = clock;
     }
 
     @Override
     @Transactional
     public void run(String... args) {
-        LocalDate hoje = LocalDate.now(FUSO_HORARIO);
+        LocalDate hoje = LocalDate.now(clock);
         LocalDate limite = hoje.plusDays(14);
-        LocalTime agora = LocalTime.now(FUSO_HORARIO);
+        LocalTime agora = LocalTime.now(clock);
 
         List<Quadra> quadras = quadraRepository.findAll();
 

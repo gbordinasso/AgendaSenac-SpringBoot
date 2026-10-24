@@ -3,6 +3,7 @@ package senac.agendasenac.service;
 import org.springframework.stereotype.Service;
 import senac.agendasenac.entity.Usuario;
 import senac.agendasenac.entity.TipoUsuario;
+import senac.agendasenac.repository.ReservaRepository;
 import senac.agendasenac.repository.UsuarioRepository;
 
 import java.util.List;
@@ -12,9 +13,13 @@ import java.util.Optional;
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
+    private final ReservaRepository reservaRepository;
 
-    public UsuarioService(UsuarioRepository usuarioRepository) {
+    public UsuarioService(
+            UsuarioRepository usuarioRepository,
+            ReservaRepository reservaRepository) {
         this.usuarioRepository = usuarioRepository;
+        this.reservaRepository = reservaRepository;
     }
 
     public Usuario salvar(Usuario usuario) {
@@ -93,6 +98,10 @@ public class UsuarioService {
     public void excluir(Long id) {
         if (!usuarioRepository.existsById(id)) {
             throw new RuntimeException("Usuário não encontrado");
+        }
+
+        if (reservaRepository.existsByUsuario_Id(id)) {
+            throw new RuntimeException("O usuário possui reservas e não pode ser excluído");
         }
 
         usuarioRepository.deleteById(id);

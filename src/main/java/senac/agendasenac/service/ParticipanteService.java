@@ -1,8 +1,10 @@
 package senac.agendasenac.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import senac.agendasenac.entity.Participante;
 import senac.agendasenac.repository.ParticipanteRepository;
+import senac.agendasenac.repository.ReservaParticipanteRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -11,9 +13,13 @@ import java.util.Optional;
 public class ParticipanteService {
 
     private final ParticipanteRepository participanteRepository;
+    private final ReservaParticipanteRepository reservaParticipanteRepository;
 
-    public ParticipanteService(ParticipanteRepository participanteRepository) {
+    public ParticipanteService(
+            ParticipanteRepository participanteRepository,
+            ReservaParticipanteRepository reservaParticipanteRepository) {
         this.participanteRepository = participanteRepository;
+        this.reservaParticipanteRepository = reservaParticipanteRepository;
     }
 
     public Participante salvar(Participante participante) {
@@ -50,12 +56,15 @@ public class ParticipanteService {
         return participanteRepository.save(participanteExistente);
     }
 
+    @Transactional
     public void excluir(Long id) {
 
         if (!participanteRepository.existsById(id)) {
             throw new RuntimeException("Participante não encontrado");
         }
 
+        // Remove primeiro os vínculos com reservas, depois o participante
+        reservaParticipanteRepository.deleteByParticipante_Id(id);
         participanteRepository.deleteById(id);
     }
 }

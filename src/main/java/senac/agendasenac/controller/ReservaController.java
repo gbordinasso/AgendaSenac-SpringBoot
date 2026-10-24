@@ -48,13 +48,6 @@ public class ReservaController {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("/{id}/concluir")
-    public ResponseEntity<Reserva> concluir(@PathVariable Long id) {
-        Reserva reservaConcluida = reservaService.concluir(id);
-
-        return ResponseEntity.ok(reservaConcluida);
-    }
-
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> excluir(@PathVariable Long id) {
         reservaService.excluir(id);

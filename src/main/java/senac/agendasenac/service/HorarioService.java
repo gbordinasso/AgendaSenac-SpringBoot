@@ -10,25 +10,25 @@ import senac.agendasenac.repository.ReservaRepository;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.ZoneId;
+import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class HorarioService {
 
-    private static final ZoneId FUSO_HORARIO =
-            ZoneId.of("America/Sao_Paulo");
-
     private final HorarioRepository horarioRepository;
     private final ReservaRepository reservaRepository;
+    private final Clock clock;
 
     public HorarioService(
             HorarioRepository horarioRepository,
-            ReservaRepository reservaRepository) {
+            ReservaRepository reservaRepository,
+            Clock clock) {
 
         this.horarioRepository = horarioRepository;
         this.reservaRepository = reservaRepository;
+        this.clock = clock;
     }
 
     public Horario salvar(Horario horario) {
@@ -153,7 +153,7 @@ public class HorarioService {
             );
         }
 
-        LocalDate hoje = LocalDate.now(FUSO_HORARIO);
+        LocalDate hoje = LocalDate.now(clock);
 
         if (data.isBefore(hoje)) {
             throw new RuntimeException(
@@ -168,7 +168,7 @@ public class HorarioService {
         }
 
         if (data.equals(hoje)
-                && !horaInicio.isAfter(LocalTime.now(FUSO_HORARIO))) {
+                && !horaInicio.isAfter(LocalTime.now(clock))) {
 
             throw new RuntimeException(
                     "Não é permitido cadastrar um horário que já começou ou passou"
