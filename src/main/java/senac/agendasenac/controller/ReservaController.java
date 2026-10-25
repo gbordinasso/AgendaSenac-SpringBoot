@@ -1,5 +1,6 @@
 package senac.agendasenac.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -56,7 +57,7 @@ public class ReservaController {
     }
 
     @PostMapping("/{id}/participantes")
-    public ResponseEntity<?> adicionarParticipante(@PathVariable Long id, @RequestBody Participante participante) {
+    public ResponseEntity<?> adicionarParticipante(@PathVariable Long id, @Valid @RequestBody Participante participante) {
 
         reservaService.adicionarParticipante(id, participante.getNome(), participante.getCpf());
 

@@ -1,5 +1,6 @@
 package senac.agendasenac.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,7 +21,7 @@ public class HorarioController {
     }
 
     @PostMapping
-    public ResponseEntity<Horario> salvar(@RequestBody Horario horario) {
+    public ResponseEntity<Horario> salvar(@Valid @RequestBody Horario horario) {
         Horario horarioSalvo = horarioService.salvar(horario);
 
         return ResponseEntity
@@ -41,7 +42,7 @@ public class HorarioController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Horario> atualizar(@PathVariable Long id, @RequestBody Horario horario) {
+    public ResponseEntity<Horario> atualizar(@PathVariable Long id, @Valid @RequestBody Horario horario) {
 
         Horario horarioAtualizado = horarioService.atualizar(id, horario);
 

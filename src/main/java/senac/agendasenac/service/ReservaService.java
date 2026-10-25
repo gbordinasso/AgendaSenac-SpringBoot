@@ -4,6 +4,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import senac.agendasenac.entity.*;
 import senac.agendasenac.repository.*;
+import senac.agendasenac.exception.ConflitoException;
+import senac.agendasenac.exception.RecursoNaoEncontradoException;
+import senac.agendasenac.exception.RequisicaoInvalidaException;
 
 import java.security.SecureRandom;
 import java.time.Clock;
@@ -48,31 +51,44 @@ public class ReservaService {
     @Transactional
     public Reserva salvar(Reserva reserva) {
 
+        if (reserva.getUsuario() == null || reserva.getUsuario().getId() == null) {
+            throw new RequisicaoInvalidaException("O usuário é obrigatório");
+        }
+
+        if (reserva.getHorario() == null || reserva.getHorario().getId() == null) {
+            throw new RequisicaoInvalidaException(
+                    "O horário é obrigatório. Escolha um horário para reservar a quadra"
+            );
+        }
+
         if (!usuarioRepository.existsById(reserva.getUsuario().getId())) {
-            throw new RuntimeException("Usuário não encontrado");
+            throw new RecursoNaoEncontradoException("Usuário não encontrado");
         }
 
         if (!horarioRepository.existsById(reserva.getHorario().getId())) {
-            throw new RuntimeException("Horário não encontrado");
+            throw new RecursoNaoEncontradoException("Horário não encontrado");
         }
 
         Horario horario = horarioRepository.findById(reserva.getHorario().getId())
-                .orElseThrow(() -> new RuntimeException("Horário não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Horário não encontrado"));
 
-        if (horario.getStatus() != StatusHorario.DISPONIVEL) {
-            throw new RuntimeException("Horário não está disponível");
+        if (horario.getQuadra().getStatus() != StatusQuadra.DISPONIVEL) {
+            throw new ConflitoException("A quadra está indisponível");
         }
 
-        // Pode reservar a qualquer momento antes do início do horário,
-        // sem prazo mínimo. Chegou a hora de início, não dá mais.
+        if (horario.getStatus() != StatusHorario.DISPONIVEL) {
+            throw new ConflitoException("Horário não está disponível");
+        }
+
+        // Pode reservar a qualquer momento antes do início do horário, se chegar a hora de início não dá mais
         LocalDateTime inicioHorario = horario.getData().atTime(horario.getHoraInicio());
 
         if (!LocalDateTime.now(clock).isBefore(inicioHorario)) {
-            throw new RuntimeException("O horário já começou e não pode mais ser reservado");
+            throw new ConflitoException("O horário já começou e não pode mais ser reservado");
         }
 
         if (reservaRepository.existsByHorarioAndStatus(horario, StatusReserva.ATIVA)) {
-            throw new RuntimeException("Horário já reservado");
+            throw new ConflitoException("Horário já reservado");
         }
 
         reserva.setHorario(horario);
@@ -100,10 +116,10 @@ public class ReservaService {
     public void cancelar(Long id) {
 
         Reserva reserva = reservaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Reserva não encontrada"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Reserva não encontrada"));
 
         if (reserva.getStatus() != StatusReserva.ATIVA) {
-            throw new RuntimeException("A reserva não está ativa");
+            throw new ConflitoException("A reserva não está ativa");
         }
 
         Horario horario = reserva.getHorario();
@@ -113,7 +129,7 @@ public class ReservaService {
         LocalDateTime limiteCancelamento = inicioHorario.minusHours(2);
 
         if (LocalDateTime.now(clock).isAfter(limiteCancelamento)) {
-            throw new RuntimeException(
+            throw new ConflitoException(
                     "A reserva só pode ser cancelada com pelo menos 2 horas de antecedência. " +
                             "Em caso de necessidade, entre em contato com o suporte."
             );
@@ -130,15 +146,15 @@ public class ReservaService {
     public void concluir(Long id) {
 
         Reserva reserva = reservaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Reserva não encontrada"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Reserva não encontrada"));
 
         if (reserva.getStatus() != StatusReserva.ATIVA) {
-            throw new RuntimeException("A reserva não está ativa");
+            throw new ConflitoException("A reserva não está ativa");
         }
 
-        // A reserva só é concluída se existir um check-in realizado.
+        // A reserva só é concluída se existir um check-in realizado
         if (!checkinRepository.existsByReserva_IdAndStatus(id, StatusCheckin.REALIZADO)) {
-            throw new RuntimeException("A reserva só pode ser concluída depois do check-in");
+            throw new ConflitoException("A reserva só pode ser concluída depois do check-in");
         }
 
         reserva.setStatus(StatusReserva.CONCLUIDA);
@@ -150,7 +166,7 @@ public class ReservaService {
     public void excluir(Long id) {
 
         Reserva reserva = reservaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Reserva não encontrada"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Reserva não encontrada"));
 
         // Se a reserva ainda estava ativa, devolve o horário para a lista
         if (reserva.getStatus() == StatusReserva.ATIVA) {
@@ -166,10 +182,10 @@ public class ReservaService {
     public void adicionarParticipante(Long reservaId, String nome, String cpf) {
 
         Reserva reserva = reservaRepository.findById(reservaId)
-                .orElseThrow(() -> new RuntimeException("Reserva não encontrada"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Reserva não encontrada"));
 
         if (reserva.getStatus() != StatusReserva.ATIVA) {
-            throw new RuntimeException("A reserva não está ativa");
+            throw new ConflitoException("A reserva não está ativa");
         }
 
         Optional<Participante> participanteExistente = participanteRepository.findByCpf(cpf);
@@ -190,7 +206,7 @@ public class ReservaService {
         ReservaParticipanteId id = new ReservaParticipanteId(reservaId, participante.getId());
 
         if (reservaParticipanteRepository.existsById(id)) {
-            throw new RuntimeException("Participante já está adicionado à reserva");
+            throw new ConflitoException("Participante já está adicionado à reserva");
         }
 
         ReservaParticipante reservaParticipante = new ReservaParticipante();

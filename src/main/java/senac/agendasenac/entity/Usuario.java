@@ -1,6 +1,9 @@
 package senac.agendasenac.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 
 @Entity
 @Table(name = "usuario")
@@ -10,18 +13,25 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "O nome é obrigatório")
     @Column(nullable = false)
     private String nome;
 
+    @NotBlank(message = "O e-mail é obrigatório")
+    @Email(message = "O e-mail é inválido")
     @Column(nullable = false, unique = true)
     private String email;
 
+    @NotBlank(message = "A senha é obrigatória")
     @Column(nullable = false)
     private String senha;
 
+    @NotBlank(message = "O CPF é obrigatório")
+    @Pattern(regexp = "\\d{11}", message = "O CPF deve ter 11 números, sem pontos ou traços")
     @Column(nullable = false, unique = true)
     private String cpf;
 
+    @NotBlank(message = "O curso é obrigatório")
     @Column(nullable = false)
     private String curso;
 

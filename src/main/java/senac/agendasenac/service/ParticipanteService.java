@@ -5,6 +5,8 @@ import org.springframework.transaction.annotation.Transactional;
 import senac.agendasenac.entity.Participante;
 import senac.agendasenac.repository.ParticipanteRepository;
 import senac.agendasenac.repository.ReservaParticipanteRepository;
+import senac.agendasenac.exception.ConflitoException;
+import senac.agendasenac.exception.RecursoNaoEncontradoException;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,7 +27,7 @@ public class ParticipanteService {
     public Participante salvar(Participante participante) {
 
         if (participanteRepository.existsByCpf(participante.getCpf())) {
-            throw new RuntimeException("CPF já cadastrado");
+            throw new ConflitoException("CPF já cadastrado");
         }
 
         return participanteRepository.save(participante);
@@ -42,12 +44,12 @@ public class ParticipanteService {
     public Participante atualizar(Long id, Participante participante) {
 
         Participante participanteExistente = participanteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Participante não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Participante não encontrado"));
 
         if (!participanteExistente.getCpf().equals(participante.getCpf())
                 && participanteRepository.existsByCpf(participante.getCpf())) {
 
-            throw new RuntimeException("CPF já cadastrado");
+            throw new ConflitoException("CPF já cadastrado");
         }
 
         participanteExistente.setNome(participante.getNome());
@@ -60,10 +62,10 @@ public class ParticipanteService {
     public void excluir(Long id) {
 
         if (!participanteRepository.existsById(id)) {
-            throw new RuntimeException("Participante não encontrado");
+            throw new RecursoNaoEncontradoException("Participante não encontrado");
         }
 
-        // Remove primeiro os vínculos com reservas, depois o participante
+        // Remove primeiro os vínculos com reservas, depois o participante.
         reservaParticipanteRepository.deleteByParticipante_Id(id);
         participanteRepository.deleteById(id);
     }

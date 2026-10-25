@@ -1,6 +1,8 @@
 package senac.agendasenac.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 
 @Entity
 @Table(name = "participante")
@@ -10,9 +12,12 @@ public class Participante {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "O nome do participante é obrigatório")
     @Column(nullable = false)
     private String nome;
 
+    @NotBlank(message = "O CPF do participante é obrigatório")
+    @Pattern(regexp = "\\d{11}", message = "O CPF do participante deve ter 11 números, sem pontos ou traços")
     @Column(nullable = false, unique = true)
     private String cpf;
 

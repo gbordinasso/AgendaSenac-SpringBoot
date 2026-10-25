@@ -5,6 +5,8 @@ import senac.agendasenac.entity.Usuario;
 import senac.agendasenac.entity.TipoUsuario;
 import senac.agendasenac.repository.ReservaRepository;
 import senac.agendasenac.repository.UsuarioRepository;
+import senac.agendasenac.exception.ConflitoException;
+import senac.agendasenac.exception.RecursoNaoEncontradoException;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,11 +27,11 @@ public class UsuarioService {
     public Usuario salvar(Usuario usuario) {
 
         if (usuarioRepository.existsByEmail(usuario.getEmail())) {
-            throw new RuntimeException("E-mail já cadastrado");
+            throw new ConflitoException("E-mail já cadastrado");
         }
 
         if (usuarioRepository.existsByCpf(usuario.getCpf())) {
-            throw new RuntimeException("CPF já cadastrado");
+            throw new ConflitoException("CPF já cadastrado");
         }
 
         return usuarioRepository.save(usuario);
@@ -59,16 +61,16 @@ public class UsuarioService {
 
     public Usuario atualizar(Long id, Usuario usuario) {
         Usuario usuarioExistente = usuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado"));
 
         if (!usuarioExistente.getEmail().equals(usuario.getEmail())
                 && usuarioRepository.existsByEmail(usuario.getEmail())) {
-            throw new RuntimeException("E-mail já cadastrado");
+            throw new ConflitoException("E-mail já cadastrado");
         }
 
         if (!usuarioExistente.getCpf().equals(usuario.getCpf())
                 && usuarioRepository.existsByCpf(usuario.getCpf())) {
-            throw new RuntimeException("CPF já cadastrado");
+            throw new ConflitoException("CPF já cadastrado");
         }
 
         usuarioExistente.setNome(usuario.getNome());
@@ -84,10 +86,10 @@ public class UsuarioService {
     public Usuario atualizarPorTipo(Long id, Usuario usuario, TipoUsuario tipoUsuario) {
 
         Usuario usuarioExistente = usuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado"));
 
         if (usuarioExistente.getTipoUsuario() != tipoUsuario) {
-            throw new RuntimeException("Usuário não pertence a este tipo");
+            throw new RecursoNaoEncontradoException("Usuário não pertence a este tipo");
         }
 
         usuario.setTipoUsuario(tipoUsuario);
@@ -97,11 +99,11 @@ public class UsuarioService {
 
     public void excluir(Long id) {
         if (!usuarioRepository.existsById(id)) {
-            throw new RuntimeException("Usuário não encontrado");
+            throw new RecursoNaoEncontradoException("Usuário não encontrado");
         }
 
         if (reservaRepository.existsByUsuario_Id(id)) {
-            throw new RuntimeException("O usuário possui reservas e não pode ser excluído");
+            throw new ConflitoException("O usuário possui reservas e não pode ser excluído");
         }
 
         usuarioRepository.deleteById(id);
@@ -110,10 +112,10 @@ public class UsuarioService {
     public void excluirPorTipo(Long id, TipoUsuario tipoUsuario) {
 
         Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado"));
 
         if (usuario.getTipoUsuario() != tipoUsuario) {
-            throw new RuntimeException("Usuário não pertence a este tipo");
+            throw new RecursoNaoEncontradoException("Usuário não pertence a este tipo");
         }
 
         excluir(id);

@@ -1,5 +1,6 @@
 package senac.agendasenac.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,7 +21,7 @@ public class QuadraController {
     }
 
     @PostMapping
-    public ResponseEntity<Quadra> salvar(@RequestBody Quadra quadra) {
+    public ResponseEntity<Quadra> salvar(@Valid @RequestBody Quadra quadra) {
         Quadra quadraSalva = quadraService.salvar(quadra);
 
         return ResponseEntity
@@ -41,7 +42,7 @@ public class QuadraController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Quadra> atualizar(@PathVariable Long id, @RequestBody Quadra quadra) {
+    public ResponseEntity<Quadra> atualizar(@PathVariable Long id, @Valid @RequestBody Quadra quadra) {
         Quadra quadraAtualizada = quadraService.atualizar(id, quadra);
 
         return ResponseEntity.ok(quadraAtualizada);

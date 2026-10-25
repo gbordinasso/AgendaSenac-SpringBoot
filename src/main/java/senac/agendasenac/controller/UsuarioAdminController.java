@@ -1,5 +1,6 @@
 package senac.agendasenac.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -55,7 +56,7 @@ public class UsuarioAdminController {
     @PutMapping("/alunos/{id}")
     public ResponseEntity<Usuario> atualizarAluno(
             @PathVariable Long id,
-            @RequestBody Usuario usuario) {
+            @Valid @RequestBody Usuario usuario) {
 
         Usuario alunoAtualizado = usuarioService.atualizarPorTipo(
                 id,
@@ -75,7 +76,7 @@ public class UsuarioAdminController {
     }
 
     @PostMapping
-    public ResponseEntity<Usuario> salvar(@RequestBody Usuario usuario) {
+    public ResponseEntity<Usuario> salvar(@Valid @RequestBody Usuario usuario) {
 
         Usuario adminSalvo = usuarioService.salvarPorTipo(
                 usuario,
@@ -90,7 +91,7 @@ public class UsuarioAdminController {
     @PutMapping("/{id}")
     public ResponseEntity<Usuario> atualizar(
             @PathVariable Long id,
-            @RequestBody Usuario usuario) {
+            @Valid @RequestBody Usuario usuario) {
 
         Usuario usuarioAtualizado = usuarioService.atualizarPorTipo(
                 id, usuario, TipoUsuario.ADMIN

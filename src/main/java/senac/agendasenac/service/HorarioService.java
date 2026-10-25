@@ -6,6 +6,9 @@ import senac.agendasenac.entity.Horario;
 import senac.agendasenac.entity.StatusReserva;
 import senac.agendasenac.repository.HorarioRepository;
 import senac.agendasenac.repository.ReservaRepository;
+import senac.agendasenac.exception.ConflitoException;
+import senac.agendasenac.exception.RecursoNaoEncontradoException;
+import senac.agendasenac.exception.RequisicaoInvalidaException;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -33,8 +36,12 @@ public class HorarioService {
 
     public Horario salvar(Horario horario) {
 
+        if (horario.getQuadra() == null || horario.getQuadra().getId() == null) {
+            throw new RequisicaoInvalidaException("A quadra é obrigatória");
+        }
+
         if (!horario.getHoraInicio().isBefore(horario.getHoraFim())) {
-            throw new RuntimeException(
+            throw new RequisicaoInvalidaException(
                     "Horário de início deve ser anterior ao horário de fim"
             );
         }
@@ -43,7 +50,7 @@ public class HorarioService {
                 horario.getHoraInicio(),
                 horario.getHoraFim())) {
 
-            throw new RuntimeException(
+            throw new RequisicaoInvalidaException(
                     "Horário deve seguir um dos blocos permitidos de 2 horas"
             );
         }
@@ -61,7 +68,7 @@ public class HorarioService {
                         horario.getHoraFim(),
                         horario.getHoraInicio())) {
 
-            throw new RuntimeException(
+            throw new ConflitoException(
                     "Horário já cadastrado ou em conflito para esta quadra"
             );
         }
@@ -81,10 +88,10 @@ public class HorarioService {
 
         Horario horarioExistente = horarioRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException("Horário não encontrado"));
+                        new RecursoNaoEncontradoException("Horário não encontrado"));
 
         if (!horario.getHoraInicio().isBefore(horario.getHoraFim())) {
-            throw new RuntimeException(
+            throw new RequisicaoInvalidaException(
                     "Horário de início deve ser anterior ao horário de fim"
             );
         }
@@ -93,7 +100,7 @@ public class HorarioService {
                 horario.getHoraInicio(),
                 horario.getHoraFim())) {
 
-            throw new RuntimeException(
+            throw new RequisicaoInvalidaException(
                     "Horário deve seguir um dos blocos permitidos de 2 horas"
             );
         }
@@ -112,7 +119,7 @@ public class HorarioService {
                         horario.getHoraInicio(),
                         id)) {
 
-            throw new RuntimeException(
+            throw new ConflitoException(
                     "Horário já cadastrado ou em conflito para esta quadra"
             );
         }
@@ -129,12 +136,12 @@ public class HorarioService {
 
         Horario horario = horarioRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException("Horário não encontrado"));
+                        new RecursoNaoEncontradoException("Horário não encontrado"));
 
         if (reservaRepository.existsByHorarioAndStatus(
                 horario, StatusReserva.ATIVA)) {
 
-            throw new RuntimeException(
+            throw new ConflitoException(
                     "Não é possível excluir um horário que possui uma reserva"
             );
         }
@@ -148,7 +155,7 @@ public class HorarioService {
             LocalTime horaFim) {
 
         if (data == null || horaInicio == null || horaFim == null) {
-            throw new RuntimeException(
+            throw new RequisicaoInvalidaException(
                     "Data, horário de início e horário de fim são obrigatórios"
             );
         }
@@ -156,13 +163,13 @@ public class HorarioService {
         LocalDate hoje = LocalDate.now(clock);
 
         if (data.isBefore(hoje)) {
-            throw new RuntimeException(
+            throw new RequisicaoInvalidaException(
                     "Não é permitido cadastrar horários em datas passadas"
             );
         }
 
         if (data.isAfter(hoje.plusDays(14))) {
-            throw new RuntimeException(
+            throw new RequisicaoInvalidaException(
                     "Só é permitido cadastrar horários com até 14 dias de antecedência"
             );
         }
@@ -170,7 +177,7 @@ public class HorarioService {
         if (data.equals(hoje)
                 && !horaInicio.isAfter(LocalTime.now(clock))) {
 
-            throw new RuntimeException(
+            throw new RequisicaoInvalidaException(
                     "Não é permitido cadastrar um horário que já começou ou passou"
             );
         }
@@ -178,7 +185,7 @@ public class HorarioService {
         DayOfWeek diaSemana = data.getDayOfWeek();
 
         if (diaSemana == DayOfWeek.SUNDAY) {
-            throw new RuntimeException(
+            throw new RequisicaoInvalidaException(
                     "Não é permitido cadastrar horários aos domingos"
             );
         }
@@ -186,7 +193,7 @@ public class HorarioService {
         if (diaSemana == DayOfWeek.SATURDAY
                 && horaFim.isAfter(LocalTime.of(16, 0))) {
 
-            throw new RuntimeException(
+            throw new RequisicaoInvalidaException(
                     "Aos sábados, o funcionamento termina às 16:00"
             );
         }

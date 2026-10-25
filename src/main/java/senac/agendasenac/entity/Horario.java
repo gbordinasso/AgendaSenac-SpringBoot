@@ -1,6 +1,7 @@
 package senac.agendasenac.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -23,13 +24,16 @@ public class Horario {
     @JoinColumn(name = "quadra_id", nullable = false)
     private Quadra quadra;
 
+    @NotNull(message = "A data é obrigatória")
     @Column(nullable = false)
     private LocalDate data;
 
-    @Column(nullable = false)
+    @NotNull(message = "O horário de início é obrigatório")
+    @Column(name = "hora_inicio", nullable = false)
     private LocalTime horaInicio;
 
-    @Column(nullable = false)
+    @NotNull(message = "O horário de fim é obrigatório")
+    @Column(name = "hora_fim", nullable = false)
     private LocalTime horaFim;
 
     @Enumerated(EnumType.STRING)
