@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import senac.agendasenac.dto.UsuarioDTO;
 import senac.agendasenac.entity.Usuario;
 import senac.agendasenac.entity.TipoUsuario;
 import senac.agendasenac.service.UsuarioService;
@@ -22,46 +23,44 @@ public class UsuarioComumController {
     }
 
     @PostMapping
-    public ResponseEntity<Usuario> salvar(@Valid @RequestBody Usuario usuario) {
+    public ResponseEntity<UsuarioDTO> salvar (@Valid @RequestBody UsuarioDTO dto) {
 
-        Usuario usuarioSalvo = usuarioService.salvarPorTipo(
-                usuario, TipoUsuario.ALUNO
-        );
+        Usuario usuario = dto.toEntity();
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(usuarioSalvo);
+        Usuario usuarioSalvo = usuarioService.salvarPorTipo(usuario, TipoUsuario.ALUNO);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(UsuarioDTO.fromEntity(usuarioSalvo));
     }
 
     @GetMapping
-    public ResponseEntity<List<Usuario>> listarTodos() {
-        return ResponseEntity.ok(
-                usuarioService.listarPorTipo(TipoUsuario.ALUNO)
-        );
+    public ResponseEntity<List<UsuarioDTO>> listarTodos() {
+
+        List<UsuarioDTO> usuarios = usuarioService
+                .listarPorTipo(TipoUsuario.ALUNO)
+                .stream()
+                .map(UsuarioDTO::fromEntity)
+                .toList();
+
+        return ResponseEntity.ok(usuarios);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Usuario> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<UsuarioDTO> buscarPorId(@PathVariable Long id) {
         return usuarioService.buscarPorIdETipo(id, TipoUsuario.ALUNO)
+                .map(UsuarioDTO::fromEntity)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Usuario> atualizar(
-            @PathVariable Long id,
-            @Valid @RequestBody Usuario usuario) {
-
-        Usuario usuarioAtualizado = usuarioService.atualizarPorTipo(
-                id, usuario, TipoUsuario.ALUNO
-        );
-
-        return ResponseEntity.ok(usuarioAtualizado);
+    public ResponseEntity<UsuarioDTO> atualizar(@PathVariable Long id, @Valid @RequestBody UsuarioDTO dto) {
+        Usuario usuarioAtualizado = usuarioService.atualizarPorTipo(id, dto.toEntity(), TipoUsuario.ALUNO);
+        return ResponseEntity.ok(UsuarioDTO.fromEntity(usuarioAtualizado));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> excluir(@PathVariable Long id) {
-
         usuarioService.excluirPorTipo(id, TipoUsuario.ALUNO);
-
         return ResponseEntity.noContent().build();
     }
 }
