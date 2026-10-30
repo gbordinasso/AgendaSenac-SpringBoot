@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 
 import senac.agendasenac.dto.CheckinDTO;
 import senac.agendasenac.entity.Checkin;
+import senac.agendasenac.exception.RecursoNaoEncontradoException;
 import senac.agendasenac.service.CheckinService;
 
 import java.util.List;
@@ -40,7 +41,7 @@ public class CheckinController {
         return checkinService.buscarPorId(id)
                 .map(CheckinDTO::fromEntity)
                 .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Check-in não encontrado"));
     }
 
     @PutMapping("/{id}")

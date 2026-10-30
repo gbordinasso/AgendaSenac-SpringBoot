@@ -9,6 +9,7 @@ import senac.agendasenac.dto.ParticipanteDTO;
 import senac.agendasenac.dto.ReservaResponseDTO;
 import senac.agendasenac.entity.Participante;
 import senac.agendasenac.entity.Reserva;
+import senac.agendasenac.exception.RecursoNaoEncontradoException;
 import senac.agendasenac.service.ReservaService;
 
 import java.util.List;
@@ -43,7 +44,7 @@ public class ReservaController {
         return reservaService.buscarPorId(id)
                 .map(ReservaResponseDTO::fromEntity)
                 .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Reserva não encontrada"));
     }
 
     @PatchMapping("/{id}/cancelar")

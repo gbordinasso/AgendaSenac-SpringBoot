@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import senac.agendasenac.entity.Quadra;
+import senac.agendasenac.exception.RecursoNaoEncontradoException;
 import senac.agendasenac.service.QuadraService;
 
 import java.util.List;
@@ -38,7 +39,7 @@ public class QuadraController {
     public ResponseEntity<Quadra> buscarPorId(@PathVariable Long id) {
         return quadraService.buscarPorId(id)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Quadra não encontrada"));
     }
 
     @PutMapping("/{id}")

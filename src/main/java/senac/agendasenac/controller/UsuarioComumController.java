@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import senac.agendasenac.dto.UsuarioDTO;
 import senac.agendasenac.entity.Usuario;
 import senac.agendasenac.entity.TipoUsuario;
+import senac.agendasenac.exception.RecursoNaoEncontradoException;
 import senac.agendasenac.service.UsuarioService;
 
 import java.util.List;
@@ -23,7 +24,7 @@ public class UsuarioComumController {
     }
 
     @PostMapping
-    public ResponseEntity<UsuarioDTO> salvar (@Valid @RequestBody UsuarioDTO dto) {
+    public ResponseEntity<UsuarioDTO> salvar(@Valid @RequestBody UsuarioDTO dto) {
 
         Usuario usuario = dto.toEntity();
 
@@ -49,7 +50,7 @@ public class UsuarioComumController {
         return usuarioService.buscarPorIdETipo(id, TipoUsuario.ALUNO)
                 .map(UsuarioDTO::fromEntity)
                 .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado"));
     }
 
     @PutMapping("/{id}")

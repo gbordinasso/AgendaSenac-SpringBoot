@@ -1,5 +1,6 @@
 package senac.agendasenac.service;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import senac.agendasenac.entity.Usuario;
 import senac.agendasenac.entity.TipoUsuario;
@@ -16,12 +17,15 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final ReservaRepository reservaRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public UsuarioService(
             UsuarioRepository usuarioRepository,
-            ReservaRepository reservaRepository) {
+            ReservaRepository reservaRepository,
+            PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
         this.reservaRepository = reservaRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public Usuario salvar(Usuario usuario) {
@@ -33,6 +37,8 @@ public class UsuarioService {
         if (usuarioRepository.existsByCpf(usuario.getCpf())) {
             throw new ConflitoException("CPF já cadastrado");
         }
+
+        usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
 
         return usuarioRepository.save(usuario);
     }
@@ -75,7 +81,7 @@ public class UsuarioService {
 
         usuarioExistente.setNome(usuario.getNome());
         usuarioExistente.setEmail(usuario.getEmail());
-        usuarioExistente.setSenha(usuario.getSenha());
+        usuarioExistente.setSenha(passwordEncoder.encode(usuario.getSenha()));
         usuarioExistente.setCpf(usuario.getCpf());
         usuarioExistente.setCurso(usuario.getCurso());
         usuarioExistente.setTipoUsuario(usuario.getTipoUsuario());

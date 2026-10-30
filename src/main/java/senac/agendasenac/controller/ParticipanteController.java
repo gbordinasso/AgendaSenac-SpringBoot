@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import senac.agendasenac.dto.ParticipanteDTO;
 import senac.agendasenac.entity.Participante;
+import senac.agendasenac.exception.RecursoNaoEncontradoException;
 import senac.agendasenac.service.ParticipanteService;
 
 import java.util.List;
@@ -42,7 +43,7 @@ public class ParticipanteController {
         return participanteService.buscarPorId(id)
                 .map(ParticipanteDTO::fromEntity)
                 .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Participante não encontrado"));
     }
 
     @PutMapping("/{id}")

@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import senac.agendasenac.entity.Horario;
+import senac.agendasenac.exception.RecursoNaoEncontradoException;
 import senac.agendasenac.service.HorarioService;
 
 import java.util.List;
@@ -38,7 +39,7 @@ public class HorarioController {
     public ResponseEntity<Horario> buscarPorId(@PathVariable Long id) {
         return horarioService.buscarPorId(id)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Horário não encontrado"));
     }
 
     @PutMapping("/{id}")

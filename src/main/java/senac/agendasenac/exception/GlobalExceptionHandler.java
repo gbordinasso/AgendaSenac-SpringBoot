@@ -50,6 +50,13 @@ public class GlobalExceptionHandler {
         return montar(HttpStatus.CONFLICT, "Conflito", e.getMessage(), request);
     }
 
+    @ExceptionHandler(NaoAutorizadoException.class)
+    public ResponseEntity<ErroResposta> naoAutorizado(
+            NaoAutorizadoException e, HttpServletRequest request) {
+
+        return montar(HttpStatus.UNAUTHORIZED, "Não autorizado", e.getMessage(), request);
+    }
+
     @ExceptionHandler(RequisicaoInvalidaException.class)
     public ResponseEntity<ErroResposta> requisicaoInvalida(
             RequisicaoInvalidaException e, HttpServletRequest request) {

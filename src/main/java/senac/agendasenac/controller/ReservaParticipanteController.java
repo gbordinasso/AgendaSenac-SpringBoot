@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import senac.agendasenac.dto.ReservaParticipanteDTO;
 import senac.agendasenac.entity.ReservaParticipante;
 import senac.agendasenac.entity.ReservaParticipanteId;
+import senac.agendasenac.exception.RecursoNaoEncontradoException;
 import senac.agendasenac.service.ReservaParticipanteService;
 
 import java.util.List;
@@ -36,7 +37,7 @@ public class ReservaParticipanteController {
         return reservaParticipanteService.buscarPorId(id)
                 .map(ReservaParticipanteDTO::fromEntity)
                 .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Participante não encontrado nesta reserva"));
     }
 
     @DeleteMapping("/{reservaId}/{participanteId}")
