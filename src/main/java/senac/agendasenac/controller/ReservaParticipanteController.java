@@ -3,6 +3,7 @@ package senac.agendasenac.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import senac.agendasenac.dto.ReservaParticipanteDTO;
 import senac.agendasenac.entity.ReservaParticipante;
 import senac.agendasenac.entity.ReservaParticipanteId;
 import senac.agendasenac.service.ReservaParticipanteService;
@@ -20,24 +21,28 @@ public class ReservaParticipanteController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ReservaParticipante>> listarTodos() {
-        return ResponseEntity.ok(reservaParticipanteService.listarTodos());
+    public ResponseEntity<List<ReservaParticipanteDTO>> listarTodos() {
+        List<ReservaParticipanteDTO> reservasParticipantes =
+                reservaParticipanteService.listarTodos()
+                        .stream()
+                        .map(ReservaParticipanteDTO::fromEntity)
+                        .toList();
+        return ResponseEntity.ok(reservasParticipantes);
     }
 
     @GetMapping("/{reservaId}/{participanteId}")
-    public ResponseEntity<ReservaParticipante> buscarPorId(@PathVariable Long reservaId, @PathVariable Long participanteId) {
+    public ResponseEntity<ReservaParticipanteDTO> buscarPorId(@PathVariable Long reservaId, @PathVariable Long participanteId) {
         ReservaParticipanteId id = criarId(reservaId, participanteId);
-
         return reservaParticipanteService.buscarPorId(id)
+                .map(ReservaParticipanteDTO::fromEntity)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{reservaId}/{participanteId}")
     public ResponseEntity<Void> excluir(@PathVariable Long reservaId, @PathVariable Long participanteId) {
         ReservaParticipanteId id = criarId(reservaId, participanteId);
         reservaParticipanteService.excluir(id);
-
         return ResponseEntity.noContent().build();
     }
 
