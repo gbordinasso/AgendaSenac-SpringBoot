@@ -6,8 +6,11 @@ import org.springframework.web.bind.annotation.*;
 
 import senac.agendasenac.dto.CheckinDTO;
 import senac.agendasenac.entity.Checkin;
+import senac.agendasenac.entity.Reserva;
 import senac.agendasenac.exception.RecursoNaoEncontradoException;
+import senac.agendasenac.security.UsuarioLogado;
 import senac.agendasenac.service.CheckinService;
+import senac.agendasenac.service.ReservaService;
 
 import java.util.List;
 
@@ -16,13 +19,27 @@ import java.util.List;
 public class CheckinController {
 
     private final CheckinService checkinService;
+    private final ReservaService reservaService;
+    private final UsuarioLogado usuarioLogado;
 
-    public CheckinController(CheckinService checkinService) {
+    public CheckinController(
+            CheckinService checkinService,
+            ReservaService reservaService,
+            UsuarioLogado usuarioLogado) {
         this.checkinService = checkinService;
+        this.reservaService = reservaService;
+        this.usuarioLogado = usuarioLogado;
     }
 
     @PostMapping
     public ResponseEntity<CheckinDTO> salvar(@RequestParam Long reservaId, @RequestParam String codigoAcesso) {
+
+        // O aluno só faz check-in da própria reserva, o admin faz de qualquer uma
+        Reserva reserva = reservaService.buscarPorId(reservaId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Reserva não encontrada"));
+
+        usuarioLogado.exigirDonoOuAdmin(reserva.getUsuario().getId());
+
         Checkin checkinSalvo = checkinService.salvar(reservaId, codigoAcesso);
         return ResponseEntity.status(HttpStatus.CREATED).body(CheckinDTO.fromEntity(checkinSalvo));
     }

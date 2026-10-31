@@ -8,8 +8,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import senac.agendasenac.dto.LoginDTO;
-import senac.agendasenac.dto.UsuarioDTO;
+import senac.agendasenac.dto.LoginResponseDTO;
 import senac.agendasenac.entity.Usuario;
+import senac.agendasenac.security.TokenService;
 import senac.agendasenac.service.AuthService;
 
 @RestController
@@ -17,14 +18,20 @@ import senac.agendasenac.service.AuthService;
 public class AuthController {
 
     private final AuthService authService;
+    private final TokenService tokenService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, TokenService tokenService) {
         this.authService = authService;
+        this.tokenService = tokenService;
     }
 
+    // O app guarda o token e manda nas próximas chamadas
     @PostMapping("/login")
-    public ResponseEntity<UsuarioDTO> login(@Valid @RequestBody LoginDTO dto) {
+    public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginDTO dto) {
         Usuario usuario = authService.login(dto.email(), dto.senha());
-        return ResponseEntity.ok(UsuarioDTO.fromEntity(usuario));
+
+        String token = tokenService.gerar(usuario);
+
+        return ResponseEntity.ok(LoginResponseDTO.of(usuario, token));
     }
 }

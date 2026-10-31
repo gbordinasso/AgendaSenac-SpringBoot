@@ -57,6 +57,13 @@ public class GlobalExceptionHandler {
         return montar(HttpStatus.UNAUTHORIZED, "Não autorizado", e.getMessage(), request);
     }
 
+    @ExceptionHandler(AcessoNegadoException.class)
+    public ResponseEntity<ErroResposta> acessoNegado(
+            AcessoNegadoException e, HttpServletRequest request) {
+
+        return montar(HttpStatus.FORBIDDEN, "Acesso negado", e.getMessage(), request);
+    }
+
     @ExceptionHandler(RequisicaoInvalidaException.class)
     public ResponseEntity<ErroResposta> requisicaoInvalida(
             RequisicaoInvalidaException e, HttpServletRequest request) {
@@ -79,7 +86,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErroResposta> validacao(
             MethodArgumentNotValidException e, HttpServletRequest request) {
 
-        // Um campo por vez, em ordem alfabética, Se o mesmo campo quebrou duas regras (ex.: CPF vazio), aparece só a primeira mensagem.
+        // Um campo por vez, em ordem alfabética, se o mesmo campo quebrou duas regras, aparece só a primeira mensagem.
         String mensagem = e.getBindingResult().getFieldErrors().stream()
                 .collect(Collectors.toMap(
                         FieldError::getField,

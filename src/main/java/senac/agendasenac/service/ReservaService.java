@@ -108,6 +108,10 @@ public class ReservaService {
         return reservaRepository.findAll();
     }
 
+    public List<Reserva> listarPorUsuario(Long usuarioId) {
+        return reservaRepository.findByUsuario_Id(usuarioId);
+    }
+
     public Optional<Reserva> buscarPorId(Long id) {
         return reservaRepository.findById(id);
     }

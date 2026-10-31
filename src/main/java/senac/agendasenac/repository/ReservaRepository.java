@@ -5,6 +5,7 @@ import senac.agendasenac.entity.Horario;
 import senac.agendasenac.entity.Reserva;
 import senac.agendasenac.entity.StatusReserva;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface ReservaRepository extends JpaRepository<Reserva, Long> {
@@ -16,6 +17,8 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
     Optional<Reserva> findByHorario(Horario horario);
 
     boolean existsByUsuario_Id(Long usuarioId);
+
+    List<Reserva> findByUsuario_Id(Long usuarioId);
 
     boolean existsByHorario_Quadra_Id(Long quadraId);
 }

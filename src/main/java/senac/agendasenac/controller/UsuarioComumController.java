@@ -9,6 +9,7 @@ import senac.agendasenac.dto.UsuarioDTO;
 import senac.agendasenac.entity.Usuario;
 import senac.agendasenac.entity.TipoUsuario;
 import senac.agendasenac.exception.RecursoNaoEncontradoException;
+import senac.agendasenac.security.UsuarioLogado;
 import senac.agendasenac.service.UsuarioService;
 
 import java.util.List;
@@ -18,9 +19,11 @@ import java.util.List;
 public class UsuarioComumController {
 
     private final UsuarioService usuarioService;
+    private final UsuarioLogado usuarioLogado;
 
-    public UsuarioComumController(UsuarioService usuarioService) {
+    public UsuarioComumController(UsuarioService usuarioService, UsuarioLogado usuarioLogado) {
         this.usuarioService = usuarioService;
+        this.usuarioLogado = usuarioLogado;
     }
 
     @PostMapping
@@ -47,6 +50,8 @@ public class UsuarioComumController {
 
     @GetMapping("/{id}")
     public ResponseEntity<UsuarioDTO> buscarPorId(@PathVariable Long id) {
+        usuarioLogado.exigirDonoOuAdmin(id);
+
         return usuarioService.buscarPorIdETipo(id, TipoUsuario.ALUNO)
                 .map(UsuarioDTO::fromEntity)
                 .map(ResponseEntity::ok)
@@ -55,13 +60,19 @@ public class UsuarioComumController {
 
     @PutMapping("/{id}")
     public ResponseEntity<UsuarioDTO> atualizar(@PathVariable Long id, @Valid @RequestBody UsuarioDTO dto) {
+        usuarioLogado.exigirDonoOuAdmin(id);
+
         Usuario usuarioAtualizado = usuarioService.atualizarPorTipo(id, dto.toEntity(), TipoUsuario.ALUNO);
+
         return ResponseEntity.ok(UsuarioDTO.fromEntity(usuarioAtualizado));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> excluir(@PathVariable Long id) {
+        usuarioLogado.exigirDonoOuAdmin(id);
+
         usuarioService.excluirPorTipo(id, TipoUsuario.ALUNO);
+
         return ResponseEntity.noContent().build();
     }
 }
