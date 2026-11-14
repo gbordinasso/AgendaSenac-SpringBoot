@@ -92,6 +92,19 @@ public class ReservaController {
         return ResponseEntity.noContent().build();
     }
 
+    // Participantes de uma reserva (dono ou admin); o responsável não entra na lista
+    @GetMapping("/{id}/participantes")
+    public ResponseEntity<List<ParticipanteDTO>> listarParticipantes(@PathVariable Long id) {
+        buscarReservaDoUsuario(id);
+
+        List<ParticipanteDTO> participantes = reservaService.listarParticipantes(id)
+                .stream()
+                .map(ParticipanteDTO::fromEntity)
+                .toList();
+
+        return ResponseEntity.ok(participantes);
+    }
+
     @PostMapping("/{id}/participantes")
     public ResponseEntity<Void> adicionarParticipante(@PathVariable Long id, @Valid @RequestBody ParticipanteDTO dto) {
         buscarReservaDoUsuario(id);

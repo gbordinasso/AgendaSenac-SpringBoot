@@ -182,6 +182,14 @@ public class ReservaService {
         exclusaoReservaService.excluirReservaEDependencias(reserva);
     }
 
+    @Transactional(readOnly = true)
+    public List<Participante> listarParticipantes(Long reservaId) {
+        return reservaParticipanteRepository.findByReserva_Id(reservaId)
+                .stream()
+                .map(ReservaParticipante::getParticipante)
+                .toList();
+    }
+
     @Transactional
     public void adicionarParticipante(Long reservaId, String nome, String cpf) {
 
